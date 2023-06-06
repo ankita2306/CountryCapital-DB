@@ -2,94 +2,71 @@ package com.world.CountryCapitals.services;
 
 import com.world.CountryCapitals.controller.AddResponse;
 import com.world.CountryCapitals.entity.Country;
+import com.world.CountryCapitals.repository.CountryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 @Component
+@Service
 public class CountryService {
-
-    static HashMap<Integer, Country> countryIdMap;    //Values in a hashmap can have multiple data
-
-
-    public CountryService()  //hardcoding data (without database)
+     @Autowired
+     CountryRepository countryRepository;
+    public List<Country> getAllCountries()
     {
-   countryIdMap = new HashMap<Integer, Country>();
-
-
-   //Obj created to add new countries,we are passing data. So constructor need to be called in Country Class
-        Country india=new Country(1,"India","Delhi");
-        Country usa=new Country(2,"USA","Washington");
-        Country uk=new Country(3,"UK","London");
-
-
-        countryIdMap.put(1,india);
-        countryIdMap.put(2,usa);
-        countryIdMap.put(3,uk);
-    }
-
-    public List getAllCountries()
-    {
-        List countries=new ArrayList(countryIdMap.values());
-        return countries;
+  return  countryRepository.findAll(); // returns list of country object
     }
 
     public Country getCountryById(int id)  //returns all details of the country based on ID
     {
-       Country country= countryIdMap.get(id);
-       return  country;
+    return countryRepository.findById(id).get();
     }
 
     public Country getCountryByName(String countryName)
-           /* cannot get name directly, since inside obj.
-            using the id , get object,read name from that obj.
-            if that name is equal to our parameter , print the details*/
     {
+List<Country> countries=countryRepository.findAll(); //Captured all data from table
         Country country=null;
-        for (int i :countryIdMap.keySet())
+        for (Country c:countries) //iterating over each rows
         {
-            if(countryIdMap.get(i).getCountryName().equals(countryName));
-            country=countryIdMap.get(i);
+if(c.getCountryName().equalsIgnoreCase(countryName))
+    country=c;
         }
         return country;
     }
 
     public Country addCountry(Country country)
-            //passing country and capital nsme, id will automatically be generated.
+            //passing country and capital name, id will automatically be generated.
     {
-        country.setId(getMaxId());
-        countryIdMap.put(country.getId(), country);
-         return country;
+    country.setId(getMaxId());
+    countryRepository.save(country);
+    return  country;
     }
 
     //Utility method to get max id
     public int getMaxId() //edited
     {
-        int max=0;
-        for(int i:countryIdMap.keySet())
-
-            if(max<i)
-                max=i;
-        return max+1;
+      return countryRepository.findAll().size()+1;
     }
 
     public Country updateCountry(Country country)
     {
-        if(country.getId()>0)
-            countryIdMap.put(country.getId(),country);
-        return country;
+       countryRepository.save(country);
+       return country;
     }
 
 
     public AddResponse deleteCountry(int id)   // Give the ID, corresponding country data is deleted
     {
-countryIdMap.remove(id);
-        AddResponse addResponse=new AddResponse();
-        addResponse.setMsg("Country data Deleted");
-        addResponse.setId(id);
-        return  addResponse;
+  countryRepository.deleteById(id);
+  AddResponse addResponse=new AddResponse();
+  addResponse.setMsg("ID"+id+"data deleted");
+  addResponse.setId(id);
+  return addResponse;
+
     }
 
 
